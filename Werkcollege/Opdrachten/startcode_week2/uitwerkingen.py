@@ -34,8 +34,9 @@ def get_y_matrix(y, m):
     # van de matrix 10 (0-9), maar de methode moet werken voor elke waarde van 
     # y en m
 
+
     #YOUR CODE HERE
-    pass
+    y_matrix = csr_matrix(m,10)
 
 # ==== OPGAVE 2c ==== 
 # ===== deel 1: =====
