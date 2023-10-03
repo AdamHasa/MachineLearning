@@ -36,7 +36,13 @@ def get_y_matrix(y, m):
 
 
     #YOUR CODE HERE
-    y_matrix = csr_matrix(m,10)
+    y_i = y[:, 0]
+    cols = y_i - 1
+    rows = np.arange(m)
+    data = np.ones(len(y))
+
+    y_vec = csr_matrix((data, (rows, cols)))
+    return y_vec
 
 # ==== OPGAVE 2c ==== 
 # ===== deel 1: =====
@@ -62,9 +68,21 @@ def predict_number(Theta1, Theta2, X):
 
     # Voeg enen toe aan het begin van elke stap en reshape de uiteindelijke
     # vector zodat deze dezelfde dimensionaliteit heeft als y in de exercise.
+    m = X.shape[0]
+    a1 = np.hstack((np.ones((m, 1)), X))
 
-    pass
+    # Bereken de activatie van de verborgen laag (a2)
+    z2 = np.dot(a1, Theta1.T)
+    a2 = sigmoid(z2)
+    
+    # Voeg enen toe aan a2 voor de laatste laag
+    a2 = np.hstack((np.ones((m, 1)), a2))
 
+    # Bereken de output van de laatste laag (a3)
+    z3 = np.dot(a2, Theta2.T)
+    a3 = sigmoid(z3)
+    
+    return a3
 
 
 # ===== deel 2: =====
@@ -78,7 +96,22 @@ def compute_cost(Theta1, Theta2, X, y):
     # Maak gebruik van de methode get_y_matrix() die je in opgave 2a hebt gemaakt
     # om deze om te zetten naar een matrix. 
 
-    pass
+    y_matrix = get_y_matrix(y, len(y))
+    m = X.shape[0]
+    
+    # Voorspel getallen met behulp van de predict_number methode
+    predictions = predict_number(Theta1, Theta2, X)
+    
+    # Converteer y naar een matrix van binair labels (1 voor juist, 0 voor onjuist)
+    y_matrix = np.zeros((m, 10))
+    for i in range(m):
+        y_matrix[i, y[i] - 1] = 1
+    
+    # Bereken de kost
+    J = (-1 / m) * np.sum(y_matrix * np.log(predictions) + (1 - y_matrix) * np.log(1 - predictions))
+    
+    return J
+    
 
 
 
@@ -88,7 +121,7 @@ def sigmoid_gradient(z):
     # Zie de opgave voor de exacte formule. Zorg ervoor dat deze werkt met
     # scalaire waarden en met vectoren.
 
-    pass
+    return sigmoid(z) * (1- sigmoid(z))
 
 # ==== OPGAVE 3b ====
 def nn_check_gradients(Theta1, Theta2, X, y): 
@@ -97,13 +130,33 @@ def nn_check_gradients(Theta1, Theta2, X, y):
 
     Delta2 = np.zeros(Theta1.shape)
     Delta3 = np.zeros(Theta2.shape)
-    m = 1 #voorbeeldwaarde; dit moet je natuurlijk aanpassen naar de echte waarde van m
+    m = X.shape[0]
 
-    for i in range(m): 
-        #YOUR CODE HERE
-        pass
+    y_matrix = get_y_matrix(y, m)
+    for i in range(5):
+        # Stap 1: Voer forward propagation uit om a1, a2 en a3 te berekenen
+        m = X.shape[0]
+        a1 = np.hstack((np.ones((m, 1)), X))
+        z2 = np.dot(a1, Theta1.T)
+        a2 = sigmoid(z2)
+        a2 = np.hstack((np.ones((m, 1)), a2))
+        z3 = np.dot(a2, Theta2.T)
+        a3 = sigmoid(z3)
 
+        
+        # Stap 2: Bereken de fout in de derde laag (output-laag)
+        delta3 = a3 - y_matrix
+
+        # Stap 3: Bereken de fout in de tweede laag (verborgen laag)
+        #delta2 = np.dot(Theta2, delta3) * sigmoid_gradient(z2)
+        delta2 = np.dot(delta3, Theta2) * sigmoid_gradient(z2)
+
+        # Stap 4: Voeg de bijdragen toe aan Delta2 en Delta3
+        Delta2 += delta2.T.dot(a1)
+        Delta3 += delta3.T.dot(a2)
+
+    # Stap 5: Bereken de gemiddelde gradiënten
     Delta2_grad = Delta2 / m
     Delta3_grad = Delta3 / m
-    
+
     return Delta2_grad, Delta3_grad
