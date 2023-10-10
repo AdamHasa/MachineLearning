@@ -129,13 +129,12 @@ def nn_check_gradients(Theta1, Theta2, X, y):
     # Zie het stappenplan in de opgaven voor een mogelijke uitwerking.
 
     Delta2 = np.zeros(Theta1.shape)
-    Delta3 = np.zeros(Theta2.shape)
+    delta3 = np.zeros(Theta2.shape)
     m = X.shape[0]
 
     y_matrix = get_y_matrix(y, m)
-    for i in range(5):
+    for i in range(m):
         # Stap 1: Voer forward propagation uit om a1, a2 en a3 te berekenen
-        m = X.shape[0]
         a1 = np.hstack((np.ones((m, 1)), X))
         z2 = np.dot(a1, Theta1.T)
         a2 = sigmoid(z2)
@@ -146,14 +145,21 @@ def nn_check_gradients(Theta1, Theta2, X, y):
         
         # Stap 2: Bereken de fout in de derde laag (output-laag)
         delta3 = a3 - y_matrix
-
+        print(delta3.shape)
         # Stap 3: Bereken de fout in de tweede laag (verborgen laag)
-        #delta2 = np.dot(Theta2, delta3) * sigmoid_gradient(z2)
-        delta2 = np.dot(delta3, Theta2) * sigmoid_gradient(z2)
+        print("Shapes - delta3:", delta3.shape, "Theta2:", Theta2.shape, "z2:", z2.shape)
+        #delta2 = np.dot(delta3, Theta2).T * sigmoid_gradient(np.hstack(([1], z2)))
+        delta2 = np.dot(delta3, Theta2).T * sigmoid_gradient(np.hstack((np.ones((z2.shape[0], 1)), z2)))
 
+        delta2 = delta2[1:]
+        
+        
         # Stap 4: Voeg de bijdragen toe aan Delta2 en Delta3
-        Delta2 += delta2.T.dot(a1)
-        Delta3 += delta3.T.dot(a2)
+
+        
+
+        Delta2 += a1.dot(delta2.T)
+        Delta3 += a2.dot(delta3.T)
 
     # Stap 5: Bereken de gemiddelde gradiënten
     Delta2_grad = Delta2 / m
